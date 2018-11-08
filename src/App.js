@@ -59,7 +59,7 @@ class App extends Component {
             console.log('Valid signature? :',tx.verifySignature());
             // console.log('V :',tx.v.toString('Hex'));
             // console.log('Sender :',tx.from.toString('Hex'));
-            // console.log('Sender :',tx.getSenderAddress().toString('Hex'));
+            console.log('Sender :',tx.getAddress().toString('Hex'));
 
             var serializedTx = tx.serialize();
             console.log(serializedTx.toString("Hex"));

@@ -157,9 +157,7 @@ class Transaction {
     // hash nine elements, with v replaced by CHAIN_ID, r = 0 and s = 0
 
     let items;
-    if (includeSignature) {
-      items = this.raw
-    } else {
+
       if (this._chainId > 0) {
         const raw = this.raw.slice();
         this.v = this._chainId;
@@ -167,9 +165,6 @@ class Transaction {
         this.s = 0;
         items = this.raw.slice(1,10);
         this.raw = raw
-      // } else {
-      //   items = this.raw.slice(0, 7)
-      }
     }
 
     // create hash
@@ -190,7 +185,8 @@ class Transaction {
    */
   getSenderAddress () {
     const pubkey = this.getSenderPublicKey()
-    this._from = ethUtil.publicToAddress(pubkey)
+
+      this._from = ethUtil.publicToAddress(pubkey)
     return this._from
   }
 
@@ -202,15 +198,34 @@ class Transaction {
     if (!this._senderPubKey || !this._senderPubKey.length) {
       if (!this.verifySignature()) throw new Error('Invalid Signature')
     }
+
     return this._senderPubKey
   }
 
+    /**
+     * returns adress
+     * @return {Buffer}
+     */
+
+
+  getAddress(){
+      const msgHash = this.hash();
+        let v = ethUtil.bufferToInt(this.v);
+
+        if (this._chainId > 0) {
+            v -= this._chainId * 2 + 8
+        }
+      this._senderPubKey = ethUtil.ecrecover(msgHash, v, this.r, this.s);
+        this._from = ethUtil.publicToAddress(this._senderPubKey);
+
+      return this._from
+  }
   /**
    * Determines if the signature is valid
    * @return {Boolean}
    */
   verifySignature () {
-    const msgHash = this.hash(true);
+    const msgHash = this.hash();
     // All transaction signatures whose s-value is greater than secp256k1n/2 are considered invalid.
     if (this._homestead && new BN(this.s).cmp(N_DIV_2) === 1) {
       return false
@@ -234,7 +249,7 @@ class Transaction {
    * @param {Buffer} privateKey
    */
   sign (privateKey) {
-    const msgHash = this.hash(false);
+    const msgHash = this.hash();
     console.log(msgHash);
     const sig = ethUtil.ecsign(msgHash, privateKey);
     if (this._chainId > 0) {
